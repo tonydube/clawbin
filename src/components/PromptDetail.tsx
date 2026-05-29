@@ -11,7 +11,6 @@ import {
   Globe,
   ThumbsUp,
   Zap,
-  Loader2,
   ArrowLeft,
 } from "lucide-react";
 import { useState } from "react";
@@ -27,7 +26,7 @@ interface PromptDetailProps {
   state: PromptState;
   onUpvote: () => void;
   onBookmark: () => void;
-  onRun: () => void;
+  onRun?: () => void;
   /** Called on mobile when user taps the back arrow to return to the feed */
   onBack?: () => void;
 }
@@ -125,7 +124,6 @@ export default function PromptDetail({
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [showAllRuns, setShowAllRuns] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
 
   const lineCount = prompt.body.split("\n").length;
   const charCount = prompt.body.length;
@@ -144,14 +142,19 @@ export default function PromptDetail({
     setTimeout(() => setCopiedLink(false), 1800);
   }
 
-  function handleRun() {
-    if (isRunning) return;
-    setIsRunning(true);
-    setTimeout(() => {
-      onRun();
-      setIsRunning(false);
-      setShowAllRuns(true);
-    }, 1500);
+  function getModelUrl(model: string): string {
+    const lower = model.toLowerCase();
+    if (lower.startsWith("claude")) return "https://claude.ai/new";
+    if (lower.startsWith("gemini")) return "https://gemini.google.com/";
+    if (lower.startsWith("mistral")) return "https://chat.mistral.ai/";
+    return "https://chatgpt.com/";
+  }
+
+  async function handleRun() {
+    await navigator.clipboard.writeText(prompt.body);
+    setCopiedPrompt(true);
+    setTimeout(() => setCopiedPrompt(false), 1800);
+    window.open(getModelUrl(prompt.model), "_blank", "noopener,noreferrer");
   }
 
   const visibleRuns = showAllRuns ? state.runs : state.runs.slice(0, 2);
@@ -221,26 +224,11 @@ export default function PromptDetail({
 
           {/* Primary Run button — desktop only; mobile uses sticky bottom bar */}
           <button
-            onClick={handleRun}
-            disabled={isRunning}
-            className={clsx(
-              "hidden lg:flex w-full items-center justify-center gap-2 h-10 rounded-xl font-semibold text-sm text-white transition-all mb-3",
-              isRunning
-                ? "bg-accent/70 cursor-not-allowed"
-                : "bg-accent hover:bg-accent-hover active:scale-[0.98] shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:shadow-[0_0_28px_rgba(124,58,237,0.45)]",
-            )}
+            onClick={() => void handleRun()}
+            className="hidden lg:flex w-full items-center justify-center gap-2 h-10 rounded-xl font-semibold text-sm text-white transition-all mb-3 bg-accent hover:bg-accent-hover active:scale-[0.98] shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:shadow-[0_0_28px_rgba(124,58,237,0.45)]"
           >
-            {isRunning ? (
-              <>
-                <Loader2 size={15} className="animate-spin" />
-                Running\u2026
-              </>
-            ) : (
-              <>
-                <Play size={14} fill="white" />
-                Run Prompt
-              </>
-            )}
+            <Play size={14} fill="white" />
+            Run Prompt
           </button>
 
           {/* Secondary actions */}
@@ -407,13 +395,7 @@ export default function PromptDetail({
                 <p className="text-sm text-text-secondary font-medium mb-1">
                   No runs yet
                 </p>
-                <p className="text-xs text-text-muted">
-                  Hit{" "}
-                  <span className="text-accent-light font-medium">
-                    Run Prompt
-                  </span>{" "}
-                  above to generate the first run.
-                </p>
+                <p className="text-xs text-text-muted">No example runs yet.</p>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
@@ -429,26 +411,11 @@ export default function PromptDetail({
       {/* ── Mobile sticky bottom action bar (hidden on desktop) ── */}
       <div className="lg:hidden flex-shrink-0 border-t border-border-subtle bg-bg-surface/95 backdrop-blur-md px-4 py-3 flex gap-3">
         <button
-          onClick={handleRun}
-          disabled={isRunning}
-          className={clsx(
-            "flex flex-1 items-center justify-center gap-2 h-12 rounded-xl font-semibold text-sm text-white transition-all",
-            isRunning
-              ? "bg-accent/70 cursor-not-allowed"
-              : "bg-accent hover:bg-accent-hover active:scale-[0.97] shadow-[0_0_18px_rgba(124,58,237,0.3)]",
-          )}
+          onClick={() => void handleRun()}
+          className="flex flex-1 items-center justify-center gap-2 h-12 rounded-xl font-semibold text-sm text-white transition-all bg-accent hover:bg-accent-hover active:scale-[0.97] shadow-[0_0_18px_rgba(124,58,237,0.3)]"
         >
-          {isRunning ? (
-            <>
-              <Loader2 size={16} className="animate-spin" />
-              Running\u2026
-            </>
-          ) : (
-            <>
-              <Play size={15} fill="white" />
-              Run Prompt
-            </>
-          )}
+          <Play size={15} fill="white" />
+          Run Prompt
         </button>
         <button
           onClick={copyPrompt}

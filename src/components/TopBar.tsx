@@ -102,15 +102,17 @@ export default function TopBar({
           aria-label={isAuthenticated ? "Your profile" : "Sign in"}
           className="hidden lg:flex rounded-full hover:ring-2 hover:ring-accent/40 transition-all items-center"
         >
-          {profile ? (
+          {isAuthenticated ? (
             <Avatar
               author={{
-                id: profile.id,
-                name: profile.display_name,
-                username: profile.username,
-                initials: getInitials(profile.display_name, profile.username),
-                avatarColor: getAvatarColor(profile.id),
-                avatarUrl: profile.avatar_url,
+                id: profile?.id ?? "",
+                name: profile?.display_name ?? "Me",
+                username: profile?.username ?? "",
+                initials: profile
+                  ? getInitials(profile.display_name, profile.username)
+                  : "Me",
+                avatarColor: profile ? getAvatarColor(profile.id) : "#7c3aed",
+                avatarUrl: profile?.avatar_url,
               }}
               size="md"
             />

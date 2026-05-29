@@ -35,7 +35,7 @@ async function fetchProfile(userId: string | null) {
     .from("profiles")
     .select("*")
     .eq("id", userId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     return null;

@@ -596,5 +596,25 @@ on public.prompt_runs
 for delete
 using (auth.uid() = user_id);
 
+-- Table grants: required because prompt_overview and tag_stats use
+-- security_invoker = on, which means the query runs as the calling role.
+-- Without these, anon/authenticated can't read the underlying tables and
+-- the views return a 42501 permission denied error.
+grant select on public.prompts        to anon, authenticated;
+grant select on public.profiles       to anon, authenticated;
+grant select on public.prompt_votes   to authenticated;
+grant select on public.bookmarks      to authenticated;
+grant select on public.prompt_runs    to authenticated;
+grant select on public.comments       to authenticated;
+
+-- Write grants for authenticated users
+grant insert, update, delete on public.prompts       to authenticated;
+grant insert, update, delete on public.prompt_votes  to authenticated;
+grant insert, update, delete on public.bookmarks     to authenticated;
+grant insert, update, delete on public.prompt_runs   to authenticated;
+grant insert, update, delete on public.comments      to authenticated;
+grant update                  on public.profiles      to authenticated;
+
+-- View grants
 grant select on public.prompt_overview to anon, authenticated;
-grant select on public.tag_stats to anon, authenticated;
+grant select on public.tag_stats       to anon, authenticated;

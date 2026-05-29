@@ -24,14 +24,18 @@ function pathnameToNav(pathname: string): string {
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { profile } = useAuth();
+  const { profile, isAuthenticated } = useAuth();
 
   if (pathname === "/login" || pathname === "/signup") {
     return <div className="h-full bg-bg-base">{children}</div>;
   }
 
   const activeNav = pathnameToNav(pathname);
-  const profilePath = profile ? `/profile/${profile.username}` : "/login";
+  const profilePath = profile
+    ? `/profile/${profile.username}`
+    : isAuthenticated
+      ? "/profile/edit"
+      : "/login";
 
   return (
     <div className="flex h-full bg-bg-base overflow-hidden">

@@ -1,19 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { DEFAULT_MODEL_OPTIONS, FEED_PAGE_SIZE } from "@/lib/constants";
+import { FEED_PAGE_SIZE } from "@/lib/constants";
 import {
   fetchBookmarkedPromptIds,
   fetchPromptById,
   fetchPromptRuns,
   fetchPrompts,
   insertPrompt,
-  insertPromptRun,
 } from "@/lib/services/prompt-service";
 import {
   buildPromptState,
-  buildRunPreview,
   mapProfileToAuthor,
   mapPromptOverviewRow,
   mapPromptRunRow,
@@ -272,8 +269,6 @@ export function usePrompts(options: UsePromptsOptions = {}) {
 
 export function usePrompt(promptId: string | null) {
   const { user, profile } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
   const [row, setRow] = useState<PromptOverviewRow | null>(null);
   const [runs, setRuns] = useState<PromptState["runs"]>([]);
   const [loading, setLoading] = useState(Boolean(promptId));
@@ -411,50 +406,9 @@ export function usePrompt(promptId: string | null) {
     await bookmarks.toggleBookmark(promptId);
   }, [bookmarks, promptId]);
 
-  const runPrompt = useCallback(async () => {
-    if (!prompt) {
-      return;
-    }
-
-    if (!user) {
-      router.push(`/login?next=${encodeURIComponent(pathname)}`);
-      return;
-    }
-
-    const model = DEFAULT_MODEL_OPTIONS[0];
-    const runRow = await insertPromptRun({
-      userId: user.id,
-      promptId: prompt.id,
-      model,
-      output: buildRunPreview(prompt.title, prompt.body),
-    });
-
-    const author = profile
-      ? mapProfileToAuthor({
-          id: profile.id,
-          username: profile.username,
-          display_name: profile.display_name,
-          avatar_url: profile.avatar_url,
-        })
-      : {
-          id: user.id,
-          name: "You",
-          username: "you",
-          initials: "YO",
-          avatarColor: "#7c3aed",
-        };
-
-    const nextRun = mapPromptRunRow(runRow, author);
-    setRuns((current) => [nextRun, ...current]);
-    setRow((current) =>
-      current
-        ? ({
-            ...current,
-            runs_count: current.runs_count + 1,
-          } as PromptOverviewRow)
-        : current,
-    );
-  }, [pathname, profile, prompt, router, user]);
+  const runPrompt = useCallback(() => {
+    // Run is handled in PromptDetail: copies the prompt body and opens the LLM.
+  }, []);
 
   return {
     prompt,
